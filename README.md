@@ -1,4 +1,4 @@
-# flip_widget
+# multi_flip_widget
 
 Flip your widget.
 

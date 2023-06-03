@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flip_widget/flip_widget.dart';
+import 'package:multi_flip_widget/multi_flip_widget.dart';
 import 'dart:math' as math;
 
 void main() {
@@ -13,6 +13,7 @@ class MyApp extends StatefulWidget {
 }
 
 const double _MinNumber = 0.008;
+
 double _clampMin(double v) {
   if (v < _MinNumber && v > -_MinNumber) {
     if (v >= 0) {
@@ -25,7 +26,7 @@ double _clampMin(double v) {
 }
 
 class _MyAppState extends State<MyApp> {
-  GlobalKey<FlipWidgetState> _flipKey = GlobalKey();
+  GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
 
   Offset _oldPosition = Offset.zero;
   bool _visible = true;
@@ -47,40 +48,53 @@ class _MyAppState extends State<MyApp> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Visibility(
-              child: Container(
+
+              child: Center(child: Container(
                 width: size.width,
                 height: size.height,
-                child: GestureDetector(
-                  child: FlipWidget(
-                    key: _flipKey,
-                    textureSize: size * 2,
-                    child: Container(
-                      color: Colors.blue,
-                      child: Center(
-                        child: Text("hello"),
+                child: Stack(children: [
+                  SizedBox(
+                    width: size.width,
+                    height: size.height,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                          color: Colors.red
                       ),
                     ),
-                    // leftToRight: true,
                   ),
-                  onHorizontalDragStart: (details) {
-                    _oldPosition = details.globalPosition;
-                    _flipKey.currentState?.startFlip();
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    Offset off = details.globalPosition - _oldPosition;
-                    double tilt = 1 / _clampMin((-off.dy + 20) / 100);
-                    double percent = math.max(0, -off.dx / size.width * 1.4);
-                    percent = percent - percent / 2 * (1 - 1 / tilt);
-                    _flipKey.currentState?.flip(percent, tilt);
-                  },
-                  onHorizontalDragEnd: (details) {
-                    _flipKey.currentState?.stopFlip();
-                  },
-                  onHorizontalDragCancel: () {
-                    _flipKey.currentState?.stopFlip();
-                  },
-                ),
-              ),
+                  GestureDetector(
+                    child: MultiFlipWidget(
+                      key: _flipKey,
+                      textureSize: size * 2,
+                      child: Container(
+                        color: Colors.blue,
+                        child: Center(
+                          child: Text("hello"),
+                        ),
+                      ),
+                      // leftToRight: true,
+                    ),
+                    onHorizontalDragStart: (details) {
+                      _oldPosition = details.globalPosition;
+                      _flipKey.currentState?.startFlip();
+                    },
+                    onHorizontalDragUpdate: (details) {
+                      Offset off = details.globalPosition - _oldPosition;
+                      double tilt = 1 / _clampMin((-off.dy + 20) / 100);
+                      double percent = math.max(0, -off.dx / size.width * 1.4);
+                      percent = percent - percent / 2 * (1 - 1 / tilt);
+                      _flipKey.currentState?.flip(percent, tilt);
+                    },
+                    onHorizontalDragEnd: (details) {
+                      _flipKey.currentState?.stopFlip();
+                    },
+                    onHorizontalDragCancel: () {
+                      _flipKey.currentState?.stopFlip();
+                    },
+                  ),
+
+                ]),
+              )),
               visible: _visible,
             ),
             TextButton(

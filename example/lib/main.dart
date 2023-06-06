@@ -25,7 +25,12 @@ double _clampMin(double v) {
   return v;
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+
+  late AnimationController _animationController;
+  Tween<double> _tween = Tween(begin: 0.0, end: 1.0);
+
+
   GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
 
   Offset _oldPosition = Offset.zero;
@@ -34,6 +39,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,  // this widget is the TickerProvider
+    );
   }
 
   @override
@@ -108,5 +116,11 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _animationController?.dispose();
   }
 }

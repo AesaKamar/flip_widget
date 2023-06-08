@@ -31,106 +31,102 @@ class _MyAppState extends State with TickerProviderStateMixin {
 
   final flipDuration = Duration(milliseconds: 500);
 
-
   GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
 
   Offset _oldPosition = Offset.zero;
   bool _visible = true;
 
-
   @override
   void initState() {
     super.initState();
 
-    _tiltAnimationController =
-        AnimationController(vsync: this,
-            duration: flipDuration,
-            lowerBound: -125,
-            upperBound: 125);
+    _tiltAnimationController = AnimationController(
+        vsync: this, duration: flipDuration, lowerBound: -125, upperBound: 125);
 
     _flipPercentageAnimationController = AnimationController(
       vsync: this,
       duration: flipDuration, // adjust the duration as needed
-    )
-      ..addListener(() {
-        _flipKey.currentState?.flip(
-            _flipPercentageAnimationController.value, _tiltAnimationController.value);
+    )..addListener(() {
+        _flipKey.currentState?.flip(_flipPercentageAnimationController.value,
+            _tiltAnimationController.value);
       });
-
   }
 
   @override
   Widget build(BuildContext context) {
-    Size size = Size(256, 256);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Visibility(
-              child: Center(
-                  child: Container(
-                    width: size.width,
-                    height: size.height,
-                    child: GestureDetector(
-                      child: Stack(children: [
-                        SizedBox(
-                          width: size.width,
-                          height: size.height,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                            ),
+        body: LayoutBuilder(builder: (context, constraints) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Visibility(
+                child: Expanded(
+                    child: Container(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  child: GestureDetector(
+                    child: Stack(children: [
+                      SizedBox(
+                        width: constraints.maxWidth,
+                        height: constraints.maxHeight,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
                           ),
                         ),
-                        MultiFlipWidget(
-                          key: _flipKey,
-                          textureSize: size * 2,
-                          child: Container(
-                            color: Colors.blue,
-                            child: Center(
-                              child: Text("hello"),
-                            ),
+                      ),
+                      MultiFlipWidget(
+                        key: _flipKey,
+                        textureSize: Size(constraints.maxWidth * 2,
+                            constraints.maxHeight * 2),
+                        child: Container(
+                          color: Colors.blue,
+                          child: Center(
+                            child: Text("hello"),
                           ),
                         ),
-                      ]),
-                      onHorizontalDragStart: (details) {
-                        print("DragStart");
-                        _oldPosition = details.globalPosition;
-                        _flipKey.currentState?.startFlip();
-                      },
-                      onHorizontalDragUpdate: (details) {
-                        Offset off = details.globalPosition - _oldPosition;
-                        double percent = math.max(0, -off.dx / size.width * 1.4);
-                        double tilt = 1 / _clampMin((-off.dy + 20) / 100);
+                      ),
+                    ]),
+                    onHorizontalDragStart: (details) {
+                      print("DragStart");
+                      _oldPosition = details.globalPosition;
+                      _flipKey.currentState?.startFlip();
+                    },
+                    onHorizontalDragUpdate: (details) {
+                      Offset off = details.globalPosition - _oldPosition;
+                      double percent =
+                          math.max(0, -off.dx / constraints.maxWidth * 1.4);
+                      double tilt = 1 / _clampMin((-off.dy + 20) / 100);
 
-                        _tiltAnimationController.value = tilt;
-                        _flipPercentageAnimationController.value = percent;
-                      },
-                      onHorizontalDragEnd: (details) {
-                        print("DragEnd");
-                        _animateToEndOrBeginning();
-                      },
-                      onHorizontalDragCancel: () {
-                        print("DragCancel");
-                        _animateToEndOrBeginning();
-                      },
-                    ),
-                  )),
-              visible: _visible,
-            ),
-            TextButton(
-                onPressed: () {
-                  setState(() {
-                    _visible = !_visible;
-                  });
-                },
-                child: Text("Toggle")),
-          ],
-        ),
+                      _tiltAnimationController.value = tilt;
+                      _flipPercentageAnimationController.value = percent;
+                    },
+                    onHorizontalDragEnd: (details) {
+                      print("DragEnd");
+                      _animateToEndOrBeginning();
+                    },
+                    onHorizontalDragCancel: () {
+                      print("DragCancel");
+                      _animateToEndOrBeginning();
+                    },
+                  ),
+                )),
+                visible: _visible,
+              ),
+              TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _visible = !_visible;
+                    });
+                  },
+                  child: Text("Toggle")),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -141,9 +137,9 @@ class _MyAppState extends State with TickerProviderStateMixin {
     } else {
       _flipPercentageAnimationController.reverse();
     }
-    if(_tiltAnimationController.value > 0){
+    if (_tiltAnimationController.value > 0) {
       _tiltAnimationController.forward();
-    }else {
+    } else {
       _tiltAnimationController.reverse();
     }
   }

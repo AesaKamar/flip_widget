@@ -129,6 +129,7 @@ class MultiFlipWidgetState extends State<MultiFlipWidget> {
   }
 
   Future<void> startFlip() async {
+    print("startign animation");
     RenderObject? boundary = _renderKey.currentContext?.findRenderObject();
     if (boundary is RenderRepaintBoundary) {
       await _queueAction(() async {

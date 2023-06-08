@@ -25,10 +25,11 @@ double _clampMin(double v) {
   return v;
 }
 
-class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+class _MyAppState extends State with TickerProviderStateMixin {
+  late AnimationController _flipPercentageAnimationController;
+  late AnimationController _tiltAnimationController;
 
-  late AnimationController _animationController;
-  Tween<double> _tween = Tween(begin: 0.0, end: 1.0);
+  final flipDuration = Duration(milliseconds: 500);
 
 
   GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
@@ -36,12 +37,26 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Offset _oldPosition = Offset.zero;
   bool _visible = true;
 
+
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,  // this widget is the TickerProvider
-    );
+
+    _tiltAnimationController =
+        AnimationController(vsync: this,
+            duration: flipDuration,
+            lowerBound: -125,
+            upperBound: 125);
+
+    _flipPercentageAnimationController = AnimationController(
+      vsync: this,
+      duration: flipDuration, // adjust the duration as needed
+    )
+      ..addListener(() {
+        _flipKey.currentState?.flip(
+            _flipPercentageAnimationController.value, _tiltAnimationController.value);
+      });
+
   }
 
   @override
@@ -56,53 +71,55 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           children: [
             Visibility(
-
-              child: Center(child: Container(
-                width: size.width,
-                height: size.height,
-                child: Stack(children: [
-                  SizedBox(
+              child: Center(
+                  child: Container(
                     width: size.width,
                     height: size.height,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                          color: Colors.red
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    child: MultiFlipWidget(
-                      key: _flipKey,
-                      textureSize: size * 2,
-                      child: Container(
-                        color: Colors.blue,
-                        child: Center(
-                          child: Text("hello"),
+                    child: GestureDetector(
+                      child: Stack(children: [
+                        SizedBox(
+                          width: size.width,
+                          height: size.height,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                            ),
+                          ),
                         ),
-                      ),
-                      // leftToRight: true,
-                    ),
-                    onHorizontalDragStart: (details) {
-                      _oldPosition = details.globalPosition;
-                      _flipKey.currentState?.startFlip();
-                    },
-                    onHorizontalDragUpdate: (details) {
-                      Offset off = details.globalPosition - _oldPosition;
-                      double tilt = 1 / _clampMin((-off.dy + 20) / 100);
-                      double percent = math.max(0, -off.dx / size.width * 1.4);
-                      percent = percent - percent / 2 * (1 - 1 / tilt);
-                      _flipKey.currentState?.flip(percent, tilt);
-                    },
-                    onHorizontalDragEnd: (details) {
-                      _flipKey.currentState?.stopFlip();
-                    },
-                    onHorizontalDragCancel: () {
-                      _flipKey.currentState?.stopFlip();
-                    },
-                  ),
+                        MultiFlipWidget(
+                          key: _flipKey,
+                          textureSize: size * 2,
+                          child: Container(
+                            color: Colors.blue,
+                            child: Center(
+                              child: Text("hello"),
+                            ),
+                          ),
+                        ),
+                      ]),
+                      onHorizontalDragStart: (details) {
+                        print("DragStart");
+                        _oldPosition = details.globalPosition;
+                        _flipKey.currentState?.startFlip();
+                      },
+                      onHorizontalDragUpdate: (details) {
+                        Offset off = details.globalPosition - _oldPosition;
+                        double percent = math.max(0, -off.dx / size.width * 1.4);
+                        double tilt = 1 / _clampMin((-off.dy + 20) / 100);
 
-                ]),
-              )),
+                        _tiltAnimationController.value = tilt;
+                        _flipPercentageAnimationController.value = percent;
+                      },
+                      onHorizontalDragEnd: (details) {
+                        print("DragEnd");
+                        _animateToEndOrBeginning();
+                      },
+                      onHorizontalDragCancel: () {
+                        print("DragCancel");
+                        _animateToEndOrBeginning();
+                      },
+                    ),
+                  )),
               visible: _visible,
             ),
             TextButton(
@@ -111,16 +128,30 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     _visible = !_visible;
                   });
                 },
-                child: Text("Toggle"))
+                child: Text("Toggle")),
           ],
         ),
       ),
     );
   }
 
+  void _animateToEndOrBeginning() {
+    if (_flipPercentageAnimationController.value > 0.5) {
+      _flipPercentageAnimationController.forward();
+    } else {
+      _flipPercentageAnimationController.reverse();
+    }
+    if(_tiltAnimationController.value > 0){
+      _tiltAnimationController.forward();
+    }else {
+      _tiltAnimationController.reverse();
+    }
+  }
+
   @override
   void dispose() {
+    print("Dispose");
     super.dispose();
-    _animationController?.dispose();
+    _flipPercentageAnimationController.dispose();
   }
 }

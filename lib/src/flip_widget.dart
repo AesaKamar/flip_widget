@@ -12,7 +12,7 @@ import './factory_stub.dart'
     if (dart.library.io) 'gl_renderer_io.dart'
     if (dart.library.html) 'gl_renderer_web.dart';
 
-class MultiFlipWidget extends StatefulWidget {
+class FlipWidget extends StatefulWidget {
   final Widget? child;
   final Size textureSize;
   final bool leftToRight;
@@ -20,7 +20,7 @@ class MultiFlipWidget extends StatefulWidget {
 
   /// [child] is the widget you want to flip.
   /// [textureSize] is the pixel size of effect layer.
-  MultiFlipWidget({
+  FlipWidget({
     Key? key,
     this.child,
     this.textureSize = const Size(512, 512),
@@ -29,12 +29,12 @@ class MultiFlipWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => MultiFlipWidgetState();
+  State<StatefulWidget> createState() => FlipWidgetState();
 }
 
 typedef FlipAction<T> = FutureOr<T> Function();
 
-class MultiFlipWidgetState extends State<MultiFlipWidget> {
+class FlipWidgetState extends State<FlipWidget> {
   GlobalKey _renderKey = GlobalKey();
   ValueNotifier<bool> _flipping = ValueNotifier(false);
   late GLCanvasController controller;

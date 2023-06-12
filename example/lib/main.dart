@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:multi_flip_widget/multi_flip_widget.dart';
+import 'package:multi_flip_widget/flip_widget.dart';
 import 'dart:math' as math;
 
 void main() {
@@ -33,7 +33,7 @@ class _MyAppState extends State with TickerProviderStateMixin {
   double totalDragDistance = 0.0;
 
 
-  GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
+  GlobalKey<FlipWidgetState> _flipKey = GlobalKey();
 
   Offset _oldPosition = Offset.zero;
   bool _visible = true;
@@ -81,7 +81,7 @@ class _MyAppState extends State with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      MultiFlipWidget(
+                      FlipWidget(
                         key: _flipKey,
                         textureSize: Size(constraints.maxWidth * 2,
                             constraints.maxHeight * 2),

@@ -129,7 +129,11 @@ class MultiFlipWidgetState extends State<MultiFlipWidget> {
   }
 
   Future<void> startFlip() async {
-    print("startign animation");
+    print("starting animation");
+    if (_flipping.value) {
+      // Flip already in progress, do nothing
+      return;
+    }
     RenderObject? boundary = _renderKey.currentContext?.findRenderObject();
     if (boundary is RenderRepaintBoundary) {
       await _queueAction(() async {
@@ -160,6 +164,7 @@ class MultiFlipWidgetState extends State<MultiFlipWidget> {
       if (_disposed) return;
       controller.beginDraw();
       _render.draw(1 - percent, tilt);
+      // print("flip");
       controller.endDraw();
     });
   }
@@ -167,6 +172,7 @@ class MultiFlipWidgetState extends State<MultiFlipWidget> {
   /// Dismiss effect layer and show the original widget.
   Future<void> stopFlip() {
     return _queueAction(() {
+      print("stopFlip");
       _flipping.value = false;
     });
   }

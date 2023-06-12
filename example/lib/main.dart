@@ -29,7 +29,9 @@ class _MyAppState extends State with TickerProviderStateMixin {
   late AnimationController _flipPercentageAnimationController;
   late AnimationController _tiltAnimationController;
 
-  final flipDuration = Duration(milliseconds: 500);
+  final flipDuration = Duration(milliseconds: 1000);
+  double totalDragDistance = 0.0;
+
 
   GlobalKey<MultiFlipWidgetState> _flipKey = GlobalKey();
 
@@ -93,6 +95,7 @@ class _MyAppState extends State with TickerProviderStateMixin {
                     ]),
                     onHorizontalDragStart: (details) {
                       print("DragStart");
+                      totalDragDistance = 0.0;
                       _oldPosition = details.globalPosition;
                       _flipKey.currentState?.startFlip();
                     },
@@ -102,12 +105,24 @@ class _MyAppState extends State with TickerProviderStateMixin {
                           math.max(0, -off.dx / constraints.maxWidth * 1.4);
                       double tilt = 1 / _clampMin((-off.dy + 20) / 100);
 
+                      totalDragDistance += off.distance;
+
                       _tiltAnimationController.value = tilt;
                       _flipPercentageAnimationController.value = percent;
                     },
                     onHorizontalDragEnd: (details) {
                       print("DragEnd");
-                      _animateToEndOrBeginning();
+                      if (totalDragDistance < 5.0) {
+                        print("nodrag");
+                        // Reset total drag distance
+                        totalDragDistance = 0.0;
+                        // Don't treat this as a drag end; return instead
+                        return;
+                      }
+                      else{
+                        _animateToEndOrBeginning();
+                      }
+
                     },
                     onHorizontalDragCancel: () {
                       print("DragCancel");

@@ -25,7 +25,7 @@ class FlipWidget extends StatefulWidget {
     this.child,
     this.textureSize = const Size(512, 512),
     this.leftToRight = false,
-    this.rollSize = 12,
+    this.rollSize = 20,
   }) : super(key: key);
 
   @override

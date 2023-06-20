@@ -3,16 +3,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:multi_flip_widget/flip_widget.dart';
-import 'package:multi_flip_widget/flip_book.dart';
 import 'dart:math' as math;
 
 void main() {
-  runApp(MyApp());
+  runApp(FlipBook());
 }
 
-class MyApp extends StatefulWidget {
+class FlipBook extends StatefulWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  _FlipBookState createState() => _FlipBookState();
 }
 
 const double _MinNumber = 0.008;
@@ -28,7 +27,7 @@ double _clampMin(double v) {
   return v;
 }
 
-class _MyAppState extends State with TickerProviderStateMixin {
+class _FlipBookState extends State with TickerProviderStateMixin {
   late AnimationController _flipPercentageAnimationController;
   late AnimationController _tiltAnimationController;
 

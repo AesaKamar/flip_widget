@@ -108,6 +108,10 @@ class FlipWidgetState extends State<FlipWidget> {
     });
   }
 
+  bool isFlipping() {
+    return _flipping.value;
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -129,8 +133,9 @@ class FlipWidgetState extends State<FlipWidget> {
   }
 
   Future<void> startFlip() async {
-    print("starting animation");
+    // print("starting animation");
     if (_flipping.value) {
+      // print("NoFlip");
       // Flip already in progress, do nothing
       return;
     }

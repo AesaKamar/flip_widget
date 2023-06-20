@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import 'package:multi_flip_widget/flip_widget.dart';
+import 'package:multi_flip_widget/flip_book.dart';
 import 'dart:math' as math;
 
 void main() {
@@ -32,7 +35,6 @@ class _MyAppState extends State with TickerProviderStateMixin {
   final flipDuration = Duration(milliseconds: 1000);
   double totalDragDistance = 0.0;
 
-
   GlobalKey<FlipWidgetState> _flipKey = GlobalKey();
 
   Offset _oldPosition = Offset.zero;
@@ -48,10 +50,23 @@ class _MyAppState extends State with TickerProviderStateMixin {
     _flipPercentageAnimationController = AnimationController(
       vsync: this,
       duration: flipDuration, // adjust the duration as needed
-    )..addListener(() {
+    )
+      ..addListener(() {
         _flipKey.currentState?.flip(_flipPercentageAnimationController.value,
             _tiltAnimationController.value);
+      })
+      ..addListener(() {
+        if(_flipKey.currentState?.isFlipping() == true) {
+          if (
+          // _flipPercentageAnimationController.status ==
+          //     AnimationStatus.completed ||
+              _flipPercentageAnimationController.status ==
+                  AnimationStatus.dismissed) {
+            _flipKey.currentState?.stopFlip();
+          }
+        }
       });
+    ;
   }
 
   @override
@@ -88,7 +103,7 @@ class _MyAppState extends State with TickerProviderStateMixin {
                         child: Container(
                           color: Colors.blue,
                           child: Center(
-                            child: Text("hello"),
+                            child: SpinningSquare(),
                           ),
                         ),
                       ),
@@ -101,8 +116,34 @@ class _MyAppState extends State with TickerProviderStateMixin {
                     },
                     onHorizontalDragUpdate: (details) {
                       Offset off = details.globalPosition - _oldPosition;
-                      double percent =
-                          math.max(0, -off.dx / constraints.maxWidth * 1.4);
+
+                      double direction = off.dx.sign;
+
+                      double percentageChangedViaDrag =
+                          -off.dx / MediaQuery.of(context).size.width * 1.4;
+
+                      double clampedPercentageChangedViaDrag =
+                          clampDouble(percentageChangedViaDrag, 0, 1);
+
+                      late double percent;
+
+                      // Right to left <-
+                      percent = lerpDouble(
+                              _flipPercentageAnimationController.value,
+                              clampedPercentageChangedViaDrag,
+                              0.1) ??
+                          1.0;
+                      // Left to right ->
+                      // else {
+                      //   percent = lerpDouble(
+                      //           1 - clampedPercentageChangedViaDrag,
+                      //           _flipPercentageAnimationController.value,
+                      //           0.1) ??
+                      //       0.0;
+                      //   print(_flipPercentageAnimationController.value);
+                      //   print(percent);
+                      // }
+
                       double tilt = 1 / _clampMin((-off.dy + 20) / 100);
 
                       totalDragDistance += off.distance;
@@ -111,18 +152,15 @@ class _MyAppState extends State with TickerProviderStateMixin {
                       _flipPercentageAnimationController.value = percent;
                     },
                     onHorizontalDragEnd: (details) {
-                      print("DragEnd");
                       if (totalDragDistance < 5.0) {
-                        print("nodrag");
                         // Reset total drag distance
                         totalDragDistance = 0.0;
                         // Don't treat this as a drag end; return instead
                         return;
-                      }
-                      else{
+                      } else {
                         _animateToEndOrBeginning();
                       }
-
+                      _animateTilt();
                     },
                     onHorizontalDragCancel: () {
                       print("DragCancel");
@@ -146,12 +184,8 @@ class _MyAppState extends State with TickerProviderStateMixin {
     );
   }
 
-  void _animateToEndOrBeginning() {
-    if (_flipPercentageAnimationController.value > 0.5) {
-      _flipPercentageAnimationController.forward();
-    } else {
-      _flipPercentageAnimationController.reverse();
-    }
+  void _animateTilt() {
+    print(_tiltAnimationController.value);
     if (_tiltAnimationController.value > 0) {
       _tiltAnimationController.forward();
     } else {
@@ -159,10 +193,62 @@ class _MyAppState extends State with TickerProviderStateMixin {
     }
   }
 
+  void _animateToEndOrBeginning() {
+    if (_flipPercentageAnimationController.value > 0.5) {
+      _flipPercentageAnimationController.forward();
+    } else {
+      _flipPercentageAnimationController.reverse();
+    }
+    // _flipKey.currentState?.stopFlip();
+  }
+
   @override
   void dispose() {
     print("Dispose");
     super.dispose();
     _flipPercentageAnimationController.dispose();
+  }
+}
+
+class SpinningSquare extends StatefulWidget {
+  @override
+  _SpinningSquareState createState() => _SpinningSquareState();
+}
+
+class _SpinningSquareState extends State<SpinningSquare>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, child) {
+        return Transform.rotate(
+          angle: _controller.value * 2.0 * math.pi,
+          child: child,
+        );
+      },
+      child: Container(
+        width: 100.0,
+        height: 100.0,
+        color: Colors.green,
+      ),
+    );
   }
 }

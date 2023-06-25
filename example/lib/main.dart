@@ -3,7 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:multi_flip_widget/flip_widget.dart';
-import 'dart:math' as math;
+import 'local_math.dart';
+import 'spinning_square.dart';
 
 void main() {
   runApp(FlipBook());
@@ -12,19 +13,6 @@ void main() {
 class FlipBook extends StatefulWidget {
   @override
   _FlipBookState createState() => _FlipBookState();
-}
-
-const double _MinNumber = 0.008;
-
-double _clampMin(double v) {
-  if (v < _MinNumber && v > -_MinNumber) {
-    if (v >= 0) {
-      v = _MinNumber;
-    } else {
-      v = -_MinNumber;
-    }
-  }
-  return v;
 }
 
 class _FlipBookState extends State with TickerProviderStateMixin {
@@ -36,7 +24,7 @@ class _FlipBookState extends State with TickerProviderStateMixin {
 
   GlobalKey<FlipWidgetState> _flipKey = GlobalKey();
 
-  Offset _oldPosition = Offset.zero;
+  Offset _dragStartPosition = Offset.zero;
   bool _visible = true;
 
   @override
@@ -55,10 +43,10 @@ class _FlipBookState extends State with TickerProviderStateMixin {
             _tiltAnimationController.value);
       })
       ..addListener(() {
-        if(_flipKey.currentState?.isFlipping() == true) {
+        if (_flipKey.currentState?.isFlipping() == true) {
           if (
-          // _flipPercentageAnimationController.status ==
-          //     AnimationStatus.completed ||
+              // _flipPercentageAnimationController.status ==
+              //     AnimationStatus.completed ||
               _flipPercentageAnimationController.status ==
                   AnimationStatus.dismissed) {
             _flipKey.currentState?.stopFlip();
@@ -110,40 +98,25 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                     onHorizontalDragStart: (details) {
                       print("DragStart");
                       totalDragDistance = 0.0;
-                      _oldPosition = details.globalPosition;
+                      _dragStartPosition = details.globalPosition;
                       _flipKey.currentState?.startFlip();
                     },
                     onHorizontalDragUpdate: (details) {
-                      Offset off = details.globalPosition - _oldPosition;
-
-                      double direction = off.dx.sign;
+                      Offset off = details.globalPosition - _dragStartPosition;
 
                       double percentageChangedViaDrag =
                           -off.dx / MediaQuery.of(context).size.width * 1.4;
 
                       double clampedPercentageChangedViaDrag =
-                          clampDouble(percentageChangedViaDrag, 0, 1);
+                          mapNumber(percentageChangedViaDrag, -1, 1, 0, 1);
 
-                      late double percent;
-
-                      // Right to left <-
-                      percent = lerpDouble(
+                      late double percent = lerpDouble(
                               _flipPercentageAnimationController.value,
                               clampedPercentageChangedViaDrag,
                               0.1) ??
                           1.0;
-                      // Left to right ->
-                      // else {
-                      //   percent = lerpDouble(
-                      //           1 - clampedPercentageChangedViaDrag,
-                      //           _flipPercentageAnimationController.value,
-                      //           0.1) ??
-                      //       0.0;
-                      //   print(_flipPercentageAnimationController.value);
-                      //   print(percent);
-                      // }
 
-                      double tilt = 1 / _clampMin((-off.dy + 20) / 100);
+                      double tilt = 1 / clampMin((-off.dy + 20) / 100);
 
                       totalDragDistance += off.distance;
 
@@ -151,14 +124,9 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                       _flipPercentageAnimationController.value = percent;
                     },
                     onHorizontalDragEnd: (details) {
-                      if (totalDragDistance < 5.0) {
-                        // Reset total drag distance
-                        totalDragDistance = 0.0;
-                        // Don't treat this as a drag end; return instead
-                        return;
-                      } else {
-                        _animateToEndOrBeginning();
-                      }
+                      print("DragEnd");
+
+                      _animateToEndOrBeginning();
                       _animateTilt();
                     },
                     onHorizontalDragCancel: () {
@@ -184,7 +152,6 @@ class _FlipBookState extends State with TickerProviderStateMixin {
   }
 
   void _animateTilt() {
-    print(_tiltAnimationController.value);
     if (_tiltAnimationController.value > 0) {
       _tiltAnimationController.forward();
     } else {
@@ -206,48 +173,5 @@ class _FlipBookState extends State with TickerProviderStateMixin {
     print("Dispose");
     super.dispose();
     _flipPercentageAnimationController.dispose();
-  }
-}
-
-class SpinningSquare extends StatefulWidget {
-  @override
-  _SpinningSquareState createState() => _SpinningSquareState();
-}
-
-class _SpinningSquareState extends State<SpinningSquare>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, child) {
-        return Transform.rotate(
-          angle: _controller.value * 2.0 * math.pi,
-          child: child,
-        );
-      },
-      child: Container(
-        width: 100.0,
-        height: 100.0,
-        color: Colors.green,
-      ),
-    );
   }
 }

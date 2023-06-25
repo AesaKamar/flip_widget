@@ -25,7 +25,34 @@ class _FlipBookState extends State with TickerProviderStateMixin {
   GlobalKey<FlipWidgetState> _flipKey = GlobalKey();
 
   Offset _dragStartPosition = Offset.zero;
-  bool _visible = true;
+  bool _globalVisible = true;
+
+  int currentPageIndex = 0;
+
+  List<Widget> pages = [
+    Container(
+      color: Colors.greenAccent,
+      child: Center(
+        child: SpinningSquare(),
+      ),
+    ),
+    Container(
+      color: Colors.yellow,
+      child: Center(
+        child: SpinningSquare(),
+      ),
+    ),
+    Container(
+      color: Colors.orange,
+      child: Center(
+        child: SpinningSquare(),
+      ),
+    ),
+    Container(
+      color: Colors.red,
+    ),
+    // Add more pages as needed...
+  ];
 
   @override
   void initState() {
@@ -44,12 +71,19 @@ class _FlipBookState extends State with TickerProviderStateMixin {
       })
       ..addListener(() {
         if (_flipKey.currentState?.isFlipping() == true) {
-          if (
-              // _flipPercentageAnimationController.status ==
-              //     AnimationStatus.completed ||
-              _flipPercentageAnimationController.status ==
-                  AnimationStatus.dismissed) {
+          if (_flipPercentageAnimationController.status ==
+              AnimationStatus.dismissed) {
             _flipKey.currentState?.stopFlip();
+          }
+          if (_flipPercentageAnimationController.status ==
+              AnimationStatus.completed) {
+            print("wahoo");
+            if (currentPageIndex < pages.length - 1) {
+              setState(() {
+                currentPageIndex++;
+                print(currentPageIndex);
+              });
+            }
           }
         }
       });
@@ -61,40 +95,40 @@ class _FlipBookState extends State with TickerProviderStateMixin {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('FlipBook Test'),
         ),
         body: LayoutBuilder(builder: (context, constraints) {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Visibility(
-                child: Expanded(
-                    child: Container(
+              Expanded(
+                  child: Visibility(
+                child: Container(
                   width: constraints.maxWidth,
                   height: constraints.maxHeight,
                   child: GestureDetector(
-                    child: Stack(children: [
-                      SizedBox(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
+                    child: Stack(
+                      children: [
+                        if (currentPageIndex < pages.length - 1) ...[
+                          Container(
+                            child: pages[currentPageIndex + 1],
+                          ),
+                        ],
+                        Container(
+                          child: FlipWidget(
+                            key: _flipKey,
+                            textureSize: Size(constraints.maxWidth * 2,
+                                constraints.maxHeight * 2),
+                            child: pages[currentPageIndex],
                           ),
                         ),
-                      ),
-                      FlipWidget(
-                        key: _flipKey,
-                        textureSize: Size(constraints.maxWidth * 2,
-                            constraints.maxHeight * 2),
-                        child: Container(
-                          color: Colors.blue,
-                          child: Center(
-                            child: SpinningSquare(),
+                        if (currentPageIndex > 0) ...[
+                          Container(
+                            child: pages[currentPageIndex - 1],
                           ),
-                        ),
-                      ),
-                    ]),
+                        ],
+                      ],
+                    ),
                     onHorizontalDragStart: (details) {
                       print("DragStart");
                       totalDragDistance = 0.0;
@@ -134,16 +168,24 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                       _animateToEndOrBeginning();
                     },
                   ),
-                )),
-                visible: _visible,
-              ),
-              TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _visible = !_visible;
-                    });
-                  },
-                  child: Text("Toggle")),
+                ),
+                visible: _globalVisible,
+              )),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: 50),
+                  // set the max height as you need
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _globalVisible = !_globalVisible;
+                      });
+                    },
+                    child: Text("Toggle"),
+                  ),
+                ),
+              )
             ],
           );
         }),

@@ -71,16 +71,19 @@ class _FlipBookState extends State with TickerProviderStateMixin {
       })
       ..addListener(() {
         if (_flipKey.currentState?.isFlipping() == true) {
+          //TODO Figure out when to set state to stop the jank flashing back to previous page
           if (_flipPercentageAnimationController.status ==
               AnimationStatus.dismissed) {
             _flipKey.currentState?.stopFlip();
           }
           if (_flipPercentageAnimationController.status ==
               AnimationStatus.completed) {
-            print("wahoo");
             if (currentPageIndex < pages.length - 1) {
               setState(() {
                 currentPageIndex++;
+                _flipPercentageAnimationController.value = 0;
+                _tiltAnimationController.value = 0;
+                print("L86");
                 print(currentPageIndex);
               });
             }
@@ -122,11 +125,12 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                             child: pages[currentPageIndex],
                           ),
                         ),
-                        if (currentPageIndex > 0) ...[
-                          Container(
-                            child: pages[currentPageIndex - 1],
-                          ),
-                        ],
+                        // This page is supposed to be flipped to the max
+                        // if (currentPageIndex > 0) ...[
+                        //   Container(
+                        //     child: pages[currentPageIndex - 1],
+                        //   ),
+                        // ],
                       ],
                     ),
                     onHorizontalDragStart: (details) {

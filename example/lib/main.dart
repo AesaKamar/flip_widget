@@ -81,6 +81,7 @@ class _FlipBookState extends State with TickerProviderStateMixin {
             if (currentPageIndex < pages.length - 1) {
               setState(() {
                 currentPageIndex++;
+                _flipKey.currentState?.stopFlip();
                 _flipPercentageAnimationController.value = 0;
                 _tiltAnimationController.value = 0;
                 print("L86");
@@ -112,11 +113,13 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                   child: GestureDetector(
                     child: Stack(
                       children: [
+                        //Underneath page
                         if (currentPageIndex < pages.length - 1) ...[
                           Container(
                             child: pages[currentPageIndex + 1],
                           ),
                         ],
+                        //Focused page
                         Container(
                           child: FlipWidget(
                             key: _flipKey,
@@ -137,7 +140,10 @@ class _FlipBookState extends State with TickerProviderStateMixin {
                       print("DragStart");
                       totalDragDistance = 0.0;
                       _dragStartPosition = details.globalPosition;
-                      _flipKey.currentState?.startFlip();
+
+                      if (!isLastPage()) {
+                        _flipKey.currentState?.startFlip();
+                      }
                     },
                     onHorizontalDragUpdate: (details) {
                       Offset off = details.globalPosition - _dragStartPosition;
@@ -195,6 +201,10 @@ class _FlipBookState extends State with TickerProviderStateMixin {
         }),
       ),
     );
+  }
+
+  bool isLastPage(){
+    return currentPageIndex == pages.length-1;
   }
 
   void _animateTilt() {
